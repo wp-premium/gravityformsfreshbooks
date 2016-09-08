@@ -35,8 +35,6 @@ class GFFreshBooks extends GFFeedAddOn {
 	public function init_admin() {
 		parent::init_admin();
 
-		$this->ensure_upgrade();
-
 		add_filter( 'gform_addon_navigation', array( $this, 'maybe_create_menu' ) );
 	}
 
@@ -267,9 +265,9 @@ class GFFreshBooks extends GFFeedAddOn {
 						'label'         => __( 'Also Create', 'gravityformsfreshbooks' ),
 						'type'          => 'radio',
 						'choices'       => array(
-							array( 'id' => 'invoice', 'label' => 'invoice', 'value' => 'invoice' ),
-							array( 'id' => 'estimate', 'label' => 'estimate', 'value' => 'estimate' ),
-							array( 'id' => 'neither', 'label' => 'neither', 'value' => 'neither' ),
+							array( 'id' => 'invoice', 'label' => 'Invoice', 'value' => 'invoice' ),
+							array( 'id' => 'estimate', 'label' => 'Estimate', 'value' => 'estimate' ),
+							array( 'id' => 'neither', 'label' => 'Neither', 'value' => 'neither' ),
 						),
 						'horizontal'    => true,
 						'default_value' => 'neither',
@@ -495,6 +493,13 @@ class GFFreshBooks extends GFFeedAddOn {
 	}
 
 	public function enable_dynamic_costs() {
+		/**
+		 * Determines if dynamic costs should be enabled
+		 *
+		 * @since 1.4.1
+		 *
+		 * @param bool false Default value is always false.
+		 */
 		$enable_dynamic = apply_filters( 'gform_freshbooks_enable_dynamic_field_mapping', false );
 
 		return $enable_dynamic;
@@ -782,7 +787,7 @@ class GFFreshBooks extends GFFeedAddOn {
 
 	}
 
-	public function export_feed( $entry, $form, $settings ) {
+	public function export_feed( $entry, $form, $feed ) {
 
 		$name_fields = array();
 		foreach ( $form['fields'] as $field ) {
@@ -793,7 +798,7 @@ class GFFreshBooks extends GFFeedAddOn {
 
 		//Creating client
 		$this->log_debug( __METHOD__ . '(): Checking to see if client exists or a new client needs to be created.' );
-		$client = $this->get_client( $form, $entry, $settings, $name_fields );
+		$client = $this->get_client( $form, $entry, $feed, $name_fields );
 
 		//if client could not be created, ignore invoice and estimate
 		if ( ! $client ) {
@@ -802,7 +807,7 @@ class GFFreshBooks extends GFFeedAddOn {
 			return;
 		}
 
-		$type = rgars( $settings, 'meta/alsoCreate' );
+		$type = rgars( $feed, 'meta/alsoCreate' );
 		if ( $type == 'invoice' ) {
 			$invoice_estimate = new FreshBooks_Invoice();
 		} elseif ( $type == 'estimate' ) {
@@ -811,18 +816,18 @@ class GFFreshBooks extends GFFeedAddOn {
 			return;
 		} //don't create invoice or estimate
 
-		if ( ! empty( $settings['meta']['poNumber'] ) ) {
-			$po_number = esc_html( $this->get_entry_value( $settings['meta']['poNumber'], $entry, $name_fields ) );
+		if ( ! empty( $feed['meta']['poNumber'] ) ) {
+			$po_number = esc_html( $this->get_entry_value( $feed['meta']['poNumber'], $entry, $name_fields ) );
 			//trim po_number to 25 characters because FreshBooks only allows 25 and more will cause invoice/estimate to not be created
 			$invoice_estimate->poNumber = substr( $po_number, 0, 25 );
 		}
-		$invoice_estimate->discount = $settings['meta']['discount'];
-		$invoice_estimate->notes    = esc_html( GFCommon::replace_variables( $settings['meta']['notes2'], $form, $entry, false, false, false, 'text' ) );
-		$invoice_estimate->terms    = esc_html( $settings['meta']['terms'] );
+		$invoice_estimate->discount = $feed['meta']['discount'];
+		$invoice_estimate->notes    = esc_html( GFCommon::replace_variables( $feed['meta']['notes2'], $form, $entry, false, false, false, 'text' ) );
+		$invoice_estimate->terms    = esc_html( $feed['meta']['terms'] );
 
 		$total = 0;
 		$lines = array();
-		if ( $settings['meta']['lineItems'] == 'pricing' ) {
+		if ( $feed['meta']['lineItems'] == 'pricing' ) {
 
 			$this->log_debug( __METHOD__ . '(): Creating line items based on pricing fields.' );
 
@@ -869,12 +874,19 @@ class GFFreshBooks extends GFFeedAddOn {
 			$this->log_debug( __METHOD__ . '(): Creating line items based on fixed costs and quantities.' );
 
 			//creating line items based on fixed cost or mapped fields
+			/**
+			 * Determines if the item ID should be used instead of the item name.
+			 *
+			 * @since 2.0
+			 *
+			 * @param bool false Defaults to false. Set to the item ID to use it.
+			 */
 			$send_item_id = apply_filters( 'gform_freshbooks_send_item_id_for_fixed_dynamic', false );
-			foreach ( $settings['meta']['item'] as $item ) {
-				$cost = $settings['meta']['lineItems'] == 'fixed' ? $settings['meta']['cost'][ $i ] : $this->get_entry_value( $settings['meta']['cost'][ $i ], $entry, $name_fields );
+			foreach ( $feed['meta']['item'] as $item ) {
+				$cost = $feed['meta']['lineItems'] == 'fixed' ? $feed['meta']['cost'][ $i ] : $this->get_entry_value( $feed['meta']['cost'][ $i ], $entry, $name_fields );
 				$cost = $this->get_number( $cost );
 
-				$quantity = $settings['meta']['lineItems'] == 'fixed' ? $settings['meta']['quantity'][ $i ] : $this->get_entry_value( $settings['meta']['quantity'][ $i ], $entry, $name_fields );
+				$quantity = $feed['meta']['lineItems'] == 'fixed' ? $feed['meta']['quantity'][ $i ] : $this->get_entry_value( $feed['meta']['quantity'][ $i ], $entry, $name_fields );
 				$amount   = $quantity * $cost;
 				$total += $amount;
 				if ( $send_item_id ) {
@@ -890,7 +902,7 @@ class GFFreshBooks extends GFFeedAddOn {
 				}
 				$lines[] = array(
 					'name'        => $item_name,
-					'description' => esc_html( $settings['meta']['description'][ $i ] ),
+					'description' => esc_html( $feed['meta']['description'][ $i ] ),
 					'unitCost'    => $cost,
 					'quantity'    => $quantity,
 					'amount'      => $amount,
@@ -912,7 +924,18 @@ class GFFreshBooks extends GFFeedAddOn {
 		$invoice_estimate->pCode        = $client->pCode;
 		$invoice_estimate->pCountry     = $client->pCountry;
 
-		$invoice_estimate = apply_filters( 'gform_freshbooks_args_pre_create', $invoice_estimate, $form, $entry );
+		/**
+		 * Filters the invoice estimate data before it is created.
+		 *
+		 * @since 2.2.3 Added the $feed parameter
+		 * @since 2.1   Initial
+		 *
+		 * @param object $invoice_estimate The invoice estimate object
+		 * @param array  $form             The Form object
+		 * @param array  $entry            The Entry object
+		 * @param array  $feed             The Feed object
+		 */
+		$invoice_estimate = apply_filters( 'gform_freshbooks_args_pre_create', $invoice_estimate, $form, $entry, $feed );
 
 		$this->log_debug( __METHOD__ . '(): Creating invoice/estimate => ' . print_r( $invoice_estimate, 1 ) );
 		$invoice_estimate->create();
@@ -920,9 +943,9 @@ class GFFreshBooks extends GFFeedAddOn {
 		if ( empty( $lastError ) ) {
 			$this->log_debug( __METHOD__ . '(): Invoice/estimate created.' );
 			$id            = $type == 'invoice' ? $invoice_estimate->invoiceId : $invoice_estimate->estimateId;
-			$createPayment = rgar( $settings['meta'], 'createPayment' );
+			$createPayment = rgar( $feed['meta'], 'createPayment' );
 			if ( ! $this->has_product_feed( $form, $entry ) || ! $createPayment ) {
-				$this->handle_note_and_send_by_email( rgar( $settings['meta'], 'sendByEmail' ), $type, $id, $entry );
+				$this->handle_note_and_send_by_email( rgar( $feed['meta'], 'sendByEmail' ), $type, $id, $entry );
 			} elseif ( $createPayment ) {
 				gform_update_meta( $entry['id'], 'freshbooks_invoice_id', $id );
 			}
@@ -1154,7 +1177,10 @@ class GFFreshBooks extends GFFeedAddOn {
 	// used to upgrade old feeds into new version
 	public function upgrade( $previous_version ) {
 
-		$previous_is_pre_addon_framework = empty( $previous_version ) || version_compare( $previous_version, '2.0.dev1', '<' );
+		if ( empty( $previous_version ) ) {
+			$previous_version = get_option( 'gf_freshbooks_version' );
+		}
+		$previous_is_pre_addon_framework = ! empty( $previous_version ) && version_compare( $previous_version, '2.0.dev1', '<' );
 
 		if ( $previous_is_pre_addon_framework ) {
 			$old_feeds = $this->get_old_feeds();
@@ -1242,25 +1268,13 @@ class GFFreshBooks extends GFFeedAddOn {
 
 	}
 
-	public function ensure_upgrade() {
-
-		if ( get_option( 'gf_freshbooks_upgrade' ) ) {
-			return false;
-		}
-
-		$feeds = $this->get_feeds();
-		if ( empty( $feeds ) ) {
-
-			//Force Add-On framework upgrade
-			$this->upgrade( '1.0' );
-		}
-
-		update_option( 'gf_freshbooks_upgrade', 1 );
-	}
-
 	public function get_old_feeds() {
 		global $wpdb;
 		$table_name = $wpdb->prefix . 'rg_freshbooks';
+
+		if ( ! $this->table_exists( $table_name ) ) {
+			return false;
+		}
 
 		$form_table_name = RGFormsModel::get_form_table_name();
 		$sql             = "SELECT s.id, s.is_active, s.form_id, s.meta, f.title as form_title

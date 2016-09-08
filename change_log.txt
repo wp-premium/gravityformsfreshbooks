@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------
+Version 2.3
+    - Added $feed as the fourth parameter of the gform_freshbooks_args_pre_create filter.
+	- Added tax fields back in API code so the hook gform_freshbooks_args_pre_create can be used to pass tax names/percentages
+	- Fixed notices thrown in API code when tax fields do not exist
+    - Fixed an issue with the upgrade routine which caused it run even if a pre-framework version hadn't been installed.
+
+---------------------------------------------------------------------
 Version 2.2
     - Fixed a low severity security vulnerability in the admin area which could be exploited by authenticated users with form administration permissions.
 
