@@ -79,8 +79,27 @@ class FreshBooks_HttpClient
 		curl_setopt($this->_curlConn, CURLOPT_FOLLOWLOCATION, true);
 		curl_setopt($this->_curlConn, CURLOPT_USERPWD, $this->_token);
 		curl_setopt($this->_curlConn, CURLOPT_TIMEOUT, 15);
-		curl_setopt($this->_curlConn, CURLOPT_SSL_VERIFYPEER, FALSE); // Validate SSL certificate
-		curl_setopt($this->_curlConn, CURLOPT_SSL_VERIFYHOST, FALSE);
+
+		/***
+		 * Determines if the cURL CURLOPT_SSL_VERIFYPEER option is enabled.
+		 *
+		 * @since 2.5
+		 *
+		 * @param bool is_enabled True to enable peer verification. False to bypass peer verification. Defaults to true.
+		 */
+		$verify_peer = apply_filters( 'gform_freshbooks_verifypeer', true );
+		curl_setopt($this->_curlConn, CURLOPT_SSL_VERIFYPEER, $verify_peer );
+
+		/***
+		 * Determines if the cURL CURLOPT_SSL_VERIFYHOST option is enabled.
+		 *
+		 * @since 2.5
+		 *
+		 * @param bool is_enabled True to enable host verification. False to bypass host verification. Defaults to true.
+		 */
+		$verify_host = apply_filters( 'gform_freshbooks_verifyhost', true );
+		curl_setopt($this->_curlConn, CURLOPT_SSL_VERIFYHOST, $verify_host );
+
 		curl_setopt($this->_curlConn, CURLOPT_USERAGENT, "FreshBooks API AJAX tester 1.0");
 		return $this;
 	}

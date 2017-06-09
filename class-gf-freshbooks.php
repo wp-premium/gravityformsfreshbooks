@@ -168,7 +168,7 @@ class GFFreshBooks extends GFFeedAddOn {
 		// ensures valid credentials were entered in the settings page
 		if ( ! $this->is_valid_credentials() ) {
 			?>
-			<div><?php echo sprintf( __( 'We are unable to login to FreshBooks with the provided username and password. Please make sure they are valid in the %sSettings Page%s', 'gravityformsfreshbooks' ),
+			<div><?php echo sprintf( __( 'We are unable to log in to FreshBooks with the provided username and password. Please make sure they are valid in the %sSettings Page%s', 'gravityformsfreshbooks' ),
 					"<a href='" . esc_url( $this->get_plugin_settings_url() ) . "'>", '</a>' ); ?>
 			</div>
 

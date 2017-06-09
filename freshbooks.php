@@ -1,9 +1,9 @@
 <?php
 /*
-Plugin Name: Gravity Forms FreshBooks Add-On
+Plugin Name: Gravity Forms FreshBooks Classic Add-On
 Plugin URI: http://www.gravityforms.com
-Description: Integrates Gravity Forms with FreshBooks allowing form submissions to be automatically sent to your FreshBooks account, creating clients, invoices and estimates
-Version: 2.3
+Description: Integrates Gravity Forms with FreshBooks Classic, allowing form submissions to be automatically sent to your FreshBooks Classic account, creating clients, invoices and estimates.  Not compatible with the new FreshBooks.
+Version: 2.5
 Author: rocketgenius
 Author URI: http://www.rocketgenius.com
 Text Domain: gravityformsfreshbooks
@@ -34,7 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
  * @var string The version number, formatted as a string
  */
-define ('GF_FRESHBOOKS_VERSION', '2.3');
+define ('GF_FRESHBOOKS_VERSION', '2.5');
 
 add_action( 'gform_loaded', array( 'GF_FreshBooks_Bootstrap', 'load' ), 5 );
 
