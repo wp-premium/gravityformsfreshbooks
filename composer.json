@@ -1,0 +1,9 @@
+{
+    "name": "wp-premium/gravityformsfreshbooks",
+    "type": "wordpress-plugin",
+    "autoload": {
+        "classmap": [
+            "."
+        ]
+    }
+}
