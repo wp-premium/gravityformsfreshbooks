@@ -1,11 +1,18 @@
 <?php
+
+// don't load directly
+if ( ! defined( 'ABSPATH' ) ) {
+	die();
+}
+
 /*
 Plugin Name: Gravity Forms FreshBooks Classic Add-On
-Plugin URI: http://www.gravityforms.com
+Plugin URI: https://www.gravityforms.com
 Description: Integrates Gravity Forms with FreshBooks Classic, allowing form submissions to be automatically sent to your FreshBooks Classic account, creating clients, invoices and estimates.  Not compatible with the new FreshBooks.
-Version: 2.5
+Version: 2.6
 Author: rocketgenius
-Author URI: http://www.rocketgenius.com
+Author URI: https://www.rocketgenius.com
+License: GPL-2.0+
 Text Domain: gravityformsfreshbooks
 Domain Path: /languages
 
@@ -34,7 +41,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
  * @var string The version number, formatted as a string
  */
-define ('GF_FRESHBOOKS_VERSION', '2.5');
+define ('GF_FRESHBOOKS_VERSION', '2.6');
 
 add_action( 'gform_loaded', array( 'GF_FreshBooks_Bootstrap', 'load' ), 5 );
 
