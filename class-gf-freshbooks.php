@@ -1,5 +1,10 @@
 <?php
 
+// don't load directly
+if ( ! defined( 'ABSPATH' ) ) {
+	die();
+}
+
 GFForms::include_feed_addon_framework();
 
 class GFFreshBooks extends GFFeedAddOn {
@@ -32,95 +37,10 @@ class GFFreshBooks extends GFFeedAddOn {
 		return self::$_instance;
 	}
 
-	public function init_admin() {
-		parent::init_admin();
-
-		add_filter( 'gform_addon_navigation', array( $this, 'maybe_create_menu' ) );
-	}
-
 	public function init_frontend() {
 		parent::init_frontend();
 
 		add_action( 'gform_post_payment_completed', array( $this, 'create_payment' ), 10, 2 );
-	}
-
-	//------- AJAX FUNCTIONS ------------------//
-
-	public function init_ajax() {
-		parent::init_ajax();
-
-		add_action( 'wp_ajax_gf_dismiss_freshbooks_menu', array( $this, 'ajax_dismiss_menu' ) );
-
-	}
-
-	public function maybe_create_menu( $menus ) {
-		$current_user            = wp_get_current_user();
-		$dismiss_freshbooks_menu = get_metadata( 'user', $current_user->ID, 'dismiss_freshbooks_menu', true );
-		if ( $dismiss_freshbooks_menu != '1' ) {
-			$menus[] = array( 'name'       => $this->_slug,
-			                  'label'      => $this->get_short_title(),
-			                  'callback'   => array( $this, 'temporary_plugin_page' ),
-			                  'permission' => $this->_capabilities_form_settings
-			);
-		}
-
-		return $menus;
-	}
-
-	public function ajax_dismiss_menu() {
-
-		$current_user = wp_get_current_user();
-		update_metadata( 'user', $current_user->ID, 'dismiss_freshbooks_menu', '1' );
-	}
-
-	public function temporary_plugin_page() {
-		$current_user = wp_get_current_user();
-		?>
-		<script type="text/javascript">
-			function dismissMenu() {
-				jQuery('#gf_spinner').show();
-				jQuery.post(ajaxurl, {
-						action: "gf_dismiss_freshbooks_menu"
-					},
-					function (response) {
-						document.location.href = '?page=gf_edit_forms';
-						jQuery('#gf_spinner').hide();
-					}
-				);
-
-			}
-		</script>
-
-		<div class="wrap about-wrap">
-			<h1><?php _e( 'FreshBooks Add-On v2.0', 'gravityformsfreshbooks' ) ?></h1>
-
-			<div
-				class="about-text"><?php _e( 'Thank you for updating! The new version of the Gravity Forms FreshBooks Add-On makes changes to how you manage your FreshBooks integration.', 'gravityformsfreshbooks' ) ?></div>
-			<div class="changelog">
-				<hr/>
-				<div class="feature-section col two-col">
-					<div class="col-1">
-						<h3><?php _e( 'Manage FreshBooks Contextually', 'gravityformsfreshbooks' ) ?></h3>
-
-						<p><?php _e( 'FreshBooks Feeds are now accessed via the FreshBooks sub-menu within the Form Settings for the Form with which you would like to integrate FreshBooks.', 'gravityformsfreshbooks' ) ?></p>
-					</div>
-					<div class="col-2 last-feature">
-						<img src="http://gravityforms.s3.amazonaws.com/webimages/AddonNotice/NewFreshBooks2.png">
-					</div>
-				</div>
-
-				<hr/>
-
-				<form method="post" id="dismiss_menu_form" style="margin-top: 20px;">
-					<input type="checkbox" name="dismiss_freshbooks_menu" value="1" onclick="dismissMenu();">
-					<label><?php _e( 'I understand this change, dismiss this message!', 'gravityformsfreshbooks' ) ?></label>
-					<img id="gf_spinner" src="<?php echo GFCommon::get_base_url() . '/images/spinner.gif'?>"
-					     alt="<?php _e( 'Please wait...', 'gravityformsfreshbooks' ) ?>" style="display:none;"/>
-				</form>
-
-			</div>
-		</div>
-	<?php
 	}
 
 	// ------- Plugin settings -------

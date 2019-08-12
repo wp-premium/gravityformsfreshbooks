@@ -98,7 +98,7 @@ class FreshBooks_HttpClient
 		 * @param bool is_enabled True to enable host verification. False to bypass host verification. Defaults to true.
 		 */
 		$verify_host = apply_filters( 'gform_freshbooks_verifyhost', true );
-		curl_setopt($this->_curlConn, CURLOPT_SSL_VERIFYHOST, $verify_host );
+		curl_setopt($this->_curlConn, CURLOPT_SSL_VERIFYHOST, $verify_host ? 2 : 0 );
 
 		curl_setopt($this->_curlConn, CURLOPT_USERAGENT, "FreshBooks API AJAX tester 1.0");
 		return $this;
