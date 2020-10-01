@@ -629,8 +629,11 @@ class GFFreshBooks extends GFFeedAddOn {
 		//non persistent cache
 		$fb_items = GFCache::get( 'freshbooks_items' );
 
-		if ( empty( $fb_items ) ) {
-			$this->init_api();
+		if ( ! is_array( $fb_items ) ) {
+			$fb_items = array();
+		}
+
+		if ( empty( $fb_items ) && $this->init_api() ) {
 			$items = new FreshBooks_Item();
 
 			$result      = array();
@@ -638,7 +641,6 @@ class GFFreshBooks extends GFFeedAddOn {
 
 			$current_page = 1;
 
-			$fb_items = array();
 			do {
 				$items->listing( $result, $result_info, $current_page, 100 );
 				$pages = $result_info['pages'];
@@ -962,23 +964,32 @@ class GFFreshBooks extends GFFeedAddOn {
 	}
 
 	private function init_api() {
+		$settings = $this->get_plugin_settings();
+		if ( empty( $settings['siteName'] ) && empty( $settings['authToken'] ) ) {
+			return false;
+		}
+
 		require_once GFFreshBooks::get_base_path() . '/api/Client.php';
 		require_once GFFreshBooks::get_base_path() . '/api/Invoice.php';
 		require_once GFFreshBooks::get_base_path() . '/api/Estimate.php';
 		require_once GFFreshBooks::get_base_path() . '/api/Item.php';
 		require_once GFFreshBooks::get_base_path() . '/api/Payment.php';
 
-		$settings  = $this->get_plugin_settings();
 		$url       = 'https://' . $settings['siteName'] . '.freshbooks.com/api/2.1/xml-in';
 		$authtoken = $settings['authToken'];
 		$this->log_debug( __METHOD__ . "(): Initializing API - url: {$url} - token: {$authtoken}" );
 		FreshBooks_HttpClient::init( $url, $authtoken );
 		$this->log_debug( __METHOD__ . '(): API Initialized.' );
+
+		return true;
 	}
 
 	public function is_valid_credentials() {
+		if ( ! $this->init_api() ) {
+			return null;
+		}
+
 		$this->log_debug( __METHOD__ . '(): Validating credentials.' );
-		$this->init_api();
 		$items = new FreshBooks_Item();
 
 		$dummy      = array();
@@ -1212,7 +1223,10 @@ class GFFreshBooks extends GFFeedAddOn {
 	}
 
 	public function get_item_name( $item_id ) {
-		$this->init_api();
+		if ( ! $this->init_api() ) {
+			return $item_id;
+		}
+
 		$item = new FreshBooks_Item();
 		$item->get( $item_id );
 		$item_name = $item->name;

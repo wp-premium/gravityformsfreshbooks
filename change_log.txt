@@ -1,3 +1,8 @@
+### 2.7 | 2020-04-21
+- Added translations for Hebrew, Hindi, Japanese, and Turkish.
+- Fixed notices which occur with PHP 7.4 when the add-on settings are not configured.
+
+
 ### 2.6 | 2019-08-07
 - Added security enhancements.
 - Added License GPL to the plugin header.
